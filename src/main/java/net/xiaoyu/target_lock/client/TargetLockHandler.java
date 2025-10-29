@@ -7,11 +7,9 @@ import net.xiaoyu.target_lock.util.EntityUtils;
 import net.xiaoyu.target_lock.util.MessageUtils;
 import net.xiaoyu.target_lock.util.RotationUtils;
 import net.xiaoyu.target_lock.util.LockTargetData;
+import net.xiaoyu.target_lock.util.TargetingUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -35,18 +33,18 @@ public class TargetLockHandler {
                 lockData.reset();
                 MessageUtils.showUnlockMessage(mc);
             } else {
-                lockNearestEntity(mc);
+                TargetingUtils.lockNearestEntity(mc, lockData);
             }
         }
 
         if (lockData.isTargetLocked() && Config.USE_NEAREST_ENTITY_PRIORITY.get() && mc.player != null) {
-            findAndLockNearestEntity(mc);
+            TargetingUtils.findAndLockNearestEntity(mc, lockData);
         }
 
         if (lockData.isTargetLocked() && lockData.getLockedTarget() != null && !lockData.getLockedTarget().isAlive() && 
             Config.SWITCH_TO_NEXT_TARGET_AFTER_KILL.get() && mc.player != null
         ) {
-            switchToNextNearestTarget(mc);
+            TargetingUtils.switchToNextNearestTarget(mc, lockData);
         }
     }
     
@@ -60,7 +58,7 @@ public class TargetLockHandler {
         Minecraft mc = Minecraft.getInstance();
 
         double lockRange = Config.LOCK_RANGE.get();
-        double lockRangeSquared = lockRange * lockRange;
+        double lockRangeSquared = EntityUtils.getLockRangeSquared(lockRange);
 
         if (lockData.isLockedTargetValid() && lockData.getLockedTarget().distanceToSqr(player) <= lockRangeSquared) {
             if (Config.LOCK_ENTITY_POSITION.get()) {
@@ -73,88 +71,14 @@ public class TargetLockHandler {
             }
 
             if (Config.KEEP_ATTACK_RANGE.get()) {
-                keepAttackRange(player, lockData.getLockedTarget(), event);
+                TargetingUtils.keepAttackRange(player, lockData.getLockedTarget(), event);
             }
-            
-            return;
-        }
 
-        handleInvalidTarget(player, mc);
-    }
-
-    private static void handleInvalidTarget(Player player, Minecraft mc) {
-        if (!lockData.getLockedTarget().isAlive()) {
-            MessageUtils.showTargetKilledMessage(mc);
-
-            if (Config.SWITCH_TO_NEXT_TARGET_AFTER_KILL.get()) {
-                switchToNextNearestTarget(mc);
-                return;
-            } else {
-                lockData.reset();
-                return;
+            if (Config.AUTO_ATTACK_AT_CRITICAL_POINT.get()) {
+                TargetingUtils.performAutoAttack(player, lockData.getLockedTarget(), mc);
             }
-        }
-
-        lockData.reset();
-        MessageUtils.showTargetLostMessage(mc);
-    }
-
-    private static void lockNearestEntity(Minecraft mc) {
-        double lockRange = Config.LOCK_RANGE.get();
-        Entity nearestEntity = EntityUtils.findNearestLivingEntity(mc, lockRange);
-        
-        if (nearestEntity != null) {
-            lockData.setLockedTarget(nearestEntity);
-            lockData.setTargetLocked(true);
-            lockData.setLockedTargetPosition(null);
-            MessageUtils.showLockSuccessMessage(mc, nearestEntity);
         } else {
-            MessageUtils.showNoTargetsMessage(mc);
+            TargetingUtils.handleInvalidTarget(mc, lockData);
         }
-    }
-
-    private static void findAndLockNearestEntity(Minecraft mc) {
-        double lockRange = Config.LOCK_RANGE.get();
-        Entity nearestEntity = EntityUtils.findNearestLivingEntity(mc, lockRange);
-        
-        if (nearestEntity != null && nearestEntity != lockData.getLockedTarget()) {
-            lockData.setLockedTarget(nearestEntity);
-            lockData.setLockedTargetPosition(null);
-            MessageUtils.showSwitchTargetMessage(mc, nearestEntity);
-        }
-    }
-
-    private static void switchToNextNearestTarget(Minecraft mc) {
-        double lockRange = Config.LOCK_RANGE.get();
-        Entity nearestEntity = EntityUtils.findNearestLivingEntity(mc, lockRange, lockData.getLockedTarget());
-        
-        if (nearestEntity != null) {
-            lockData.setLockedTarget(nearestEntity);
-            lockData.setTargetLocked(true);
-            lockData.setLockedTargetPosition(null);
-            MessageUtils.showSwitchToNextTargetMessage(mc, nearestEntity);
-        } else {
-            lockData.reset();
-            MessageUtils.showNoNextTargetMessage(mc);
-        }
-    }
-    
-    private static void keepAttackRange(Player player, Entity target, MovementInputUpdateEvent event) {
-        Vec3 playerPos = player.getEyePosition();
-        Vec3 targetPos = target.getEyePosition();
-
-        double attackRange = player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-        
-        double distance = playerPos.distanceTo(targetPos);
-        double distanceDiff = distance - attackRange;
-
-        Vec3 direction = playerPos.subtract(targetPos).normalize();
-
-        double adjustmentFactor = distanceDiff * Config.ATTACK_RANGE_ADJUSTMENT_FACTOR.get();
-
-        Vec3 moveVector = direction.scale(adjustmentFactor);
-
-        event.getInput().leftImpulse += (float) moveVector.x;
-        event.getInput().forwardImpulse += (float) moveVector.z;
     }
 }

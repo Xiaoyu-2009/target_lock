@@ -41,4 +41,8 @@ public class EntityUtils {
     public static Entity findNearestLivingEntity(Minecraft mc, double range) {
         return findNearestEntity(mc, range, null, entity -> entity instanceof LivingEntity);
     }
+
+    public static double getLockRangeSquared(double range) {
+        return range * range;
+    }
 }

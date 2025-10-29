@@ -11,6 +11,7 @@ public class Config {
     public static final ModConfigSpec.BooleanValue LOCK_ENTITY_POSITION;
     public static final ModConfigSpec.BooleanValue KEEP_ATTACK_RANGE;
     public static final ModConfigSpec.DoubleValue ATTACK_RANGE_ADJUSTMENT_FACTOR;
+    public static final ModConfigSpec.BooleanValue AUTO_ATTACK_AT_CRITICAL_POINT;
     
     static {
         BUILDER.comment("Target Lock Config").push("target_lock");
@@ -38,6 +39,10 @@ public class Config {
         ATTACK_RANGE_ADJUSTMENT_FACTOR = BUILDER
                 .comment("Adjustment strength for maintaining optimal attack distance")
                 .defineInRange("attackRangeAdjustmentFactor", 10.0D, 0.0D, Double.MAX_VALUE);
+        
+        AUTO_ATTACK_AT_CRITICAL_POINT = BUILDER
+                .comment("Whether to automatically attack when the target is at critical point")
+                .define("autoAttackAtCriticalPoint", false);
         
         BUILDER.pop();
         SPEC = BUILDER.build();
