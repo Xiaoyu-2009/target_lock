@@ -89,6 +89,16 @@ public class TargetingUtils {
         Config.HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT.get() : 
         Config.HIGH_FREQUENCY_ATTACK_NEAR_CRITICAL_POINT.get();
 
+        if (isAtCriticalPoint) {
+            if (!Config.AUTO_ATTACK_WITHIN_RANGE.get()) {
+                return;
+            }
+        } else {
+            if (!Config.AUTO_ATTACK_AT_CRITICAL_POINT_POSITION.get()) {
+                return;
+            }
+        }
+
         if (shouldHighFrequencyAttack) {
             mc.gameMode.attack(player, target);
         } else {
