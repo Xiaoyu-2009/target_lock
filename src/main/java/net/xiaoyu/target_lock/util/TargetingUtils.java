@@ -2,6 +2,7 @@ package net.xiaoyu.target_lock.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.xiaoyu.target_lock.Config;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -79,17 +80,16 @@ public class TargetingUtils {
         event.getInput().leftImpulse = moveImpulses[1] * (float) adjustmentFactor;
     }
 
-    public static void performAutoAttack(Player player, Entity target, Minecraft mc) {
+    public static void performAutoAttack(Player player, Entity target, Minecraft mc, double lockRangeSquared) {
         double distance = CombatUtils.getDistance(player, target);
         double attackRange = CombatUtils.getAttackRange(player);
         double distanceDiff = distance - attackRange;
 
-        boolean isAtCriticalPoint = distanceDiff <= 0;
-        boolean shouldHighFrequencyAttack = isAtCriticalPoint ? 
-        Config.HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT.get() : 
+        boolean shouldHighFrequencyAttack = distanceDiff <= 0 ?
+        Config.HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT.get() :
         Config.HIGH_FREQUENCY_ATTACK_NEAR_CRITICAL_POINT.get();
 
-        if (isAtCriticalPoint) {
+        if (shouldHighFrequencyAttack) {
             if (!Config.AUTO_ATTACK_WITHIN_RANGE.get()) {
                 return;
             }
@@ -99,12 +99,37 @@ public class TargetingUtils {
             }
         }
 
-        if (shouldHighFrequencyAttack) {
-            mc.gameMode.attack(player, target);
+        if (Config.AUTO_ATTACK_ALL_TARGETS_IN_RANGE.get()) {
+            attackTargets(player, target, mc, lockRangeSquared, shouldHighFrequencyAttack, true);
         } else {
-            if (player.getAttackStrengthScale(0.0F) >= 1.0F) {
-                mc.gameMode.attack(player, target);
+            attackTargets(player, target, mc, lockRangeSquared, shouldHighFrequencyAttack, false);
+        }
+    }
+
+    private static void attackTargets(
+        Player player, Entity target, Minecraft mc, 
+        double lockRangeSquared, boolean shouldHighFrequencyAttack, boolean attackAllTargets
+    ) {
+        boolean canAttack = shouldHighFrequencyAttack || player.getAttackStrengthScale(0.0F) >= 1.0F;
+        
+        if (!canAttack) {
+            return;
+        }
+        
+        if (attackAllTargets) {
+            if (mc.player != null && mc.level != null) {
+                Vec3 playerPos = mc.player.getEyePosition();
+                for (Entity entity : mc.level.entitiesForRendering()) {
+                    if (entity != player && entity.isAlive() && entity instanceof LivingEntity) {
+                        double entityDistance = entity.distanceToSqr(playerPos);
+                        if (entityDistance <= lockRangeSquared) {
+                            mc.gameMode.attack(player, entity);
+                        }
+                    }
+                }
             }
+        } else {
+            mc.gameMode.attack(player, target);
         }
     }
 }

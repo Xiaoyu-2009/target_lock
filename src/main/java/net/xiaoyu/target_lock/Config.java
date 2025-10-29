@@ -15,6 +15,7 @@ public class Config {
     public static final ModConfigSpec.BooleanValue AUTO_ATTACK_AT_CRITICAL_POINT;
     public static final ModConfigSpec.BooleanValue AUTO_ATTACK_WITHIN_RANGE;
     public static final ModConfigSpec.BooleanValue AUTO_ATTACK_AT_CRITICAL_POINT_POSITION;
+    public static final ModConfigSpec.BooleanValue AUTO_ATTACK_ALL_TARGETS_IN_RANGE;
     public static final ModConfigSpec.BooleanValue HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT;
     public static final ModConfigSpec.BooleanValue HIGH_FREQUENCY_ATTACK_NEAR_CRITICAL_POINT;
     
@@ -60,6 +61,10 @@ public class Config {
         AUTO_ATTACK_AT_CRITICAL_POINT_POSITION = BUILDER
                 .comment("Whether to automatically attack when at critical point position")
                 .define("autoAttackAtCriticalPointPosition", true);
+
+        AUTO_ATTACK_ALL_TARGETS_IN_RANGE = BUILDER
+                .comment("Whether to automatically attack all targets within attack range")
+                .define("autoAttackAllTargetsInRange", false);
 
         HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT = BUILDER
                 .comment("Whether to enable high frequency attack when at critical point")

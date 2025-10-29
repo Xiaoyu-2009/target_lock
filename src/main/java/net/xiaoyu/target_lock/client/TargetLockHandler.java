@@ -69,7 +69,7 @@ public class TargetLockHandler {
             }
 
             if (Config.AUTO_ATTACK_AT_CRITICAL_POINT.get()) {
-                TargetingUtils.performAutoAttack(player, lockData.getLockedTarget(), mc);
+                TargetingUtils.performAutoAttack(player, lockData.getLockedTarget(), mc, lockRangeSquared);
             }
         } else {
             TargetingUtils.handleInvalidTarget(mc, lockData);
