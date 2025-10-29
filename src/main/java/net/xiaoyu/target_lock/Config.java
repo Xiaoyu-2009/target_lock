@@ -53,7 +53,7 @@ public class Config {
 
         HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT = BUILDER
                 .comment("Whether to enable high frequency attack when at critical point")
-                .define("highFrequencyAttackAtCriticalPoint", true);
+                .define("highFrequencyAttackAtCriticalPoint", false);
         
         HIGH_FREQUENCY_ATTACK_NEAR_CRITICAL_POINT = BUILDER
                 .comment("Whether to enable high frequency attack when near critical point")
