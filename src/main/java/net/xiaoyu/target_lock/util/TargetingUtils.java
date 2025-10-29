@@ -53,7 +53,7 @@ public class TargetingUtils {
         if (!lockData.getLockedTarget().isAlive()) {
             MessageUtils.showTargetKilledMessage(mc);
 
-            if (Config.SWITCH_TO_NEXT_TARGET_AFTER_KILL.get()) {
+            if (Config.SWITCH_TO_NEXT_TARGET_AFTER_KILL.get() && Config.AUTO_SWITCH_TO_NEXT_TARGET.get()) {
                 switchToNextNearestTarget(mc, lockData);
                 return;
             } else {
@@ -84,14 +84,17 @@ public class TargetingUtils {
         double attackRange = CombatUtils.getAttackRange(player);
         double distanceDiff = distance - attackRange;
 
-        if (distanceDiff <= 0) {
-            if (distanceDiff > -0.5) {
-                if (player.getAttackStrengthScale(0.0F) < 1.0F) {
-                    return;
-                }
-            }
+        boolean isAtCriticalPoint = distanceDiff <= 0;
+        boolean shouldHighFrequencyAttack = isAtCriticalPoint ? 
+        Config.HIGH_FREQUENCY_ATTACK_AT_CRITICAL_POINT.get() : 
+        Config.HIGH_FREQUENCY_ATTACK_NEAR_CRITICAL_POINT.get();
 
+        if (shouldHighFrequencyAttack) {
             mc.gameMode.attack(player, target);
+        } else {
+            if (player.getAttackStrengthScale(0.0F) >= 1.0F) {
+                mc.gameMode.attack(player, target);
+            }
         }
     }
 }

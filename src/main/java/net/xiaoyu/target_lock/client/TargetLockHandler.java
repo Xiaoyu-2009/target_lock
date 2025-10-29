@@ -40,12 +40,6 @@ public class TargetLockHandler {
         if (lockData.isTargetLocked() && Config.USE_NEAREST_ENTITY_PRIORITY.get() && mc.player != null) {
             TargetingUtils.findAndLockNearestEntity(mc, lockData);
         }
-
-        if (lockData.isTargetLocked() && lockData.getLockedTarget() != null && !lockData.getLockedTarget().isAlive() && 
-            Config.SWITCH_TO_NEXT_TARGET_AFTER_KILL.get() && mc.player != null
-        ) {
-            TargetingUtils.switchToNextNearestTarget(mc, lockData);
-        }
     }
     
     @SubscribeEvent
